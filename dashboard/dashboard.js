@@ -296,5 +296,5 @@ document.getElementById("save-training").addEventListener("click", () => {
 });
 
 function goHome() {
-    window.location.href = "index.html";
+    window.location.href = "./index.html";
 }
