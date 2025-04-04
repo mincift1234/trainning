@@ -37,7 +37,6 @@ auth.onAuthStateChanged((user) => {
 
     // 🔄 로그아웃 후 자동 새로고침
     if (currentUser !== null) {
-      // 로그아웃이 발생했을 때만 새로고침
       window.location.reload();
     }
     currentUser = null;
@@ -52,7 +51,7 @@ document.getElementById("login-btn").addEventListener("click", () => {
   });
 });
 
-// ✅ 로그아웃 (→ 자동 새로고침은 onAuthStateChanged에서 처리)
+// ✅ 로그아웃
 document.getElementById("logout-btn").addEventListener("click", () => {
   auth.signOut();
 });
@@ -80,25 +79,46 @@ document.getElementById("right-btn").addEventListener("click", () => {
 
 updateCards();
 
-// ✅ 플랜 만들기 버튼
+// ✅ 플랜 만들기 버튼 (고유 ID로 문서 저장)
 document.getElementById("start-plan").addEventListener("click", () => {
-  const selected = cards[currentIndex].textContent;
+  const selected = cards[currentIndex].textContent.trim();
   let type = "accuracy";
   if (selected.includes("트래킹")) type = "tracking";
   else if (selected.includes("플릭샷")) type = "flick";
 
-  localStorage.setItem("selectedPlan", type);
-  alert(`${selected} 선택됨! 대시보드로 이동합니다.`);
-  window.location.href = "/dashboard/dashboard.html";
+  if (!currentUser) {
+    alert("로그인 후 사용해주세요.");
+    return;
+  }
+
+  const title = selected;
+
+  const newDocRef = db.collection("users")
+    .doc(currentUser.uid)
+    .collection("plans")
+    .doc(); // 🔥 고유 ID 생성
+
+  newDocRef.set({
+    title,
+    type,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  }).then(() => {
+    alert(`${title} 플랜이 생성되었습니다!`);
+    localStorage.setItem("selectedPlanId", newDocRef.id); // 선택된 고유 ID 저장
+    window.location.href = "/dashboard/dashboard.html";
+  }).catch((error) => {
+    alert("플랜 생성 실패: " + error.message);
+  });
 });
 
-// ✅ 내가 만든 플랜 불러오기 (카드형 UI로 개선)
+// ✅ 내가 만든 플랜 불러오기 (각 플랜 고유 ID 기준)
 function loadUserPlans() {
   if (!currentUser) return;
 
   db.collection("users")
     .doc(currentUser.uid)
     .collection("plans")
+    .orderBy("createdAt", "desc")
     .get()
     .then((querySnapshot) => {
       if (querySnapshot.empty) return;
@@ -109,18 +129,18 @@ function loadUserPlans() {
       list.innerHTML = "";
 
       querySnapshot.forEach((doc) => {
-        const planType = doc.id; // accuracy, tracking, flick
         const data = doc.data();
+        const planId = doc.id;
 
         const card = document.createElement("div");
         card.className = "plan-card";
         card.innerHTML = `
           <div class="plan-title">${data.title}</div>
-          <div class="plan-type">(${planType})</div>
+          <div class="plan-type">(${data.type})</div>
         `;
 
         card.addEventListener("click", () => {
-          localStorage.setItem("selectedPlan", planType);
+          localStorage.setItem("selectedPlanId", planId); // 고유 ID 저장
           window.location.href = "/dashboard/dashboard.html";
         });
 
