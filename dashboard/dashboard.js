@@ -67,10 +67,12 @@ function openPopup(date) {
     document.getElementById("tracking").value = "";
     document.getElementById("flick").value = "";
 
-    if (!currentUser) return;
+    if (!currentUser || !selectedPlanId) return;
 
     db.collection("users")
         .doc(currentUser.uid)
+        .collection("plans")
+        .doc(selectedPlanId)
         .collection("scores")
         .doc(date)
         .get()
@@ -99,17 +101,19 @@ document.getElementById("save-score").addEventListener("click", () => {
     const tracking = parseInt(document.getElementById("tracking").value);
     const flick = parseInt(document.getElementById("flick").value);
 
-    if (!currentUser) return alert("로그인이 필요합니다.");
+    if (!currentUser || !selectedPlanId) return alert("로그인이 필요합니다.");
 
     db.collection("users")
         .doc(currentUser.uid)
+        .collection("plans")
+        .doc(selectedPlanId)
         .collection("scores")
         .doc(date)
         .set({ date, accuracy, tracking, flick })
         .then(() => {
             alert("✅ 점수 저장 완료!");
             document.getElementById("popup").classList.add("hidden");
-            loadScoresAndDrawChart();
+            loadScoresAndDrawChart(); // ← 아래도 수정 필요
         })
         .catch((err) => {
             console.error("❌ 저장 실패", err);
