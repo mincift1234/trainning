@@ -37,7 +37,7 @@ auth.onAuthStateChanged((user) => {
         loadScoresAndDrawChart();
     } else {
         alert("로그인이 필요합니다.");
-        window.location.href = "/index/index.html";
+        window.location.href = "index.html";
     }
 });
 
@@ -294,3 +294,7 @@ document.getElementById("save-training").addEventListener("click", () => {
             alert("저장 중 오류 발생");
         });
 });
+
+function goHome() {
+    window.location.href = "index.html";
+}
