@@ -294,11 +294,17 @@ document.getElementById("save-training").addEventListener("click", () => {
 
     if (!currentUser || !currentTrainingType) return;
 
+    const updateData = {};
+    updateData[`custom.${currentTrainingType}`] = {
+        titles,
+        time
+    };
+
     db.collection("users")
         .doc(currentUser.uid)
         .collection("plans")
-        .doc(selectedPlanId) // ⬅ 이걸로 수정
-        .set({ titles, time })
+        .doc(selectedPlanId)
+        .set(updateData, { merge: true }) // ✅ 필수!!
         .then(() => {
             alert("훈련 저장 완료!");
             closeTrainingPopup();
