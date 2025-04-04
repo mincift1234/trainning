@@ -128,10 +128,12 @@ document.getElementById("mode-select").addEventListener("change", () => {
 
 // 점수 불러와서 그래프 그리기
 function loadScoresAndDrawChart() {
-    if (!currentUser) return;
+    if (!currentUser || !selectedPlanId) return;
 
     db.collection("users")
         .doc(currentUser.uid)
+        .collection("plans")
+        .doc(selectedPlanId)
         .collection("scores")
         .orderBy("date")
         .get()
@@ -152,6 +154,9 @@ function loadScoresAndDrawChart() {
             const mode = document.getElementById("mode-select").value;
             drawSingleBarChart(dates, accuracyData, trackingData, flickData, mode);
             analyzeRoutine(accuracyData, trackingData, flickData);
+        })
+        .catch((err) => {
+            console.error("❌ 점수 불러오기 실패", err);
         });
 }
 
